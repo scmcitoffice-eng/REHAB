@@ -2,6 +2,19 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCEbpiTzpeywLkHmAEGuZae7iDWEmETYK4",
+  authDomain: "rehab-que.firebaseapp.com",
+  projectId: "rehab-que",
+  storageBucket: "rehab-que.firebasestorage.app",
+  messagingSenderId: "293927657943",
+  appId: "1:293927657943:web:c940e0adbfd884413a2b92",
+  measurementId: "G-V30N8GGMVN",
+  databaseURL: "REPLACE_WITH_YOUR_REALTIME_DATABASE_URL"
+};
+
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app, firebaseConfig.databaseURL);
 const queueRef = ref(db, 'queue_state');
