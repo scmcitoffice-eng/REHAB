@@ -120,17 +120,17 @@
     <script>
         // ── Firebase Init ──────────────────────────────────────────────
         firebase.initializeApp({
-            apiKey: "AIzaSyCEbpiTzpeywLkHmAEGuZae7iDWEmETYK4",
-            authDomain: "rehab-que.firebaseapp.com",
-            projectId: "rehab-que",
-            storageBucket: "rehab-que.firebasestorage.app",
-            messagingSenderId: "293927657943",
-            appId: "1:293927657943:web:c940e0adbfd884413a2b92",
-            measurementId: "G-V30N8GGMVN",
-            databaseURL: "REPLACE_WITH_YOUR_REALTIME_DATABASE_URL"
+            apiKey: "AIzaSyCKaS3b8Usv9zBHWuqzq3RMCIwtx7ttc5Q",
+            authDomain: "queueing-system-a35aa.firebaseapp.com",
+            projectId: "queueing-system-a35aa",
+            storageBucket: "queueing-system-a35aa.firebasestorage.app",
+            messagingSenderId: "706820569428",
+            appId: "1:706820569428:web:72792a1fef109a5a4670c1",
+            measurementId: "G-2J6DHTV94S",
+            databaseURL: "https://queueing-system-a35aa-default-rtdb.asia-southeast1.firebasedatabase.app"
         });
 
-        const db = firebase.app().database("REPLACE_WITH_YOUR_REALTIME_DATABASE_URL");
+        const db = firebase.app().database("https://queueing-system-a35aa-default-rtdb.asia-southeast1.firebasedatabase.app");
         const queueRef = db.ref('queue_state');
 
         // ── Local State ────────────────────────────────────────────────
