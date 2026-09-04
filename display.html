@@ -383,9 +383,44 @@
         const colorMap = { H: 'hmo', C: 'cash', P: 'priority' };
         const typeLabel = { H: 'HMO', C: 'Cash', P: 'PWD / Priority' };
 
+        // ── Voice selection (prefer a female English voice) ─────────────
+        let selectedVoice = null;
+        const FEMALE_VOICE_HINTS = [
+            'female', 'zira', 'samantha', 'susan', 'victoria', 'karen',
+            'moira', 'tessa', 'fiona', 'google us english', 'google uk english female',
+            'microsoft zira', 'ava', 'allison', 'serena', 'aria', 'jenny', 'emma'
+        ];
+
+        function pickFemaleVoice() {
+            const voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+            if (!voices.length) return null;
+
+            const englishVoices = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+            const pool = englishVoices.length ? englishVoices : voices;
+
+            // Try to match a known female-sounding voice name first
+            let match = pool.find(v => FEMALE_VOICE_HINTS.some(hint => v.name.toLowerCase().includes(hint)));
+            if (match) return match;
+
+            // Fall back to any voice whose name doesn't hint male
+            const maleHints = ['male', 'david', 'mark', 'daniel', 'george', 'james', 'alex'];
+            match = pool.find(v => !maleHints.some(hint => v.name.toLowerCase().includes(hint)));
+            return match || pool[0];
+        }
+
+        function loadVoices() {
+            selectedVoice = pickFemaleVoice();
+        }
+
+        loadVoices();
+        if (window.speechSynthesis) {
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
         function startDisplay() {
             systemActive = true;
             document.getElementById('overlay').style.display = 'none';
+            loadVoices();
             // Small silent announcement to "prime" the engine
             announceNumber("");
         }
@@ -397,8 +432,12 @@
             msg.text = `Now serving number ${label}. Please proceed to the window.`;
             msg.lang = 'en-US';
             msg.rate = 0.85;
-            msg.pitch = 1;
+            msg.pitch = 1.1;
             msg.volume = 1;
+            if (selectedVoice) {
+                msg.voice = selectedVoice;
+                msg.lang = selectedVoice.lang;
+            }
             window.speechSynthesis.speak(msg);
         }
 
