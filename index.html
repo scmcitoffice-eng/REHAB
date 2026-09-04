@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>QueueFlow — Medical Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+
+        <header class="header">
+            <div class="logo-block">
+                <span class="logo-tag">+</span>
+                <div>
+                    <h1 class="logo-title">QueueFlow</h1>
+                    <p class="logo-sub">Medical Center — Queue System</p>
+                </div>
+            </div>
+            <a href="display.html" target="_blank" class="btn-display-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+                Launch Customer View
+            </a>
+        </header>
+
+        <!-- Queue Type Tabs -->
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="HMO" onclick="setTab('HMO')">
+                <span class="tab-icon">🏥</span>
+                <span class="tab-label">HMO</span>
+                <span class="tab-prefix">H001, H002…</span>
+            </button>
+            <button class="tab-btn" data-tab="Cash" onclick="setTab('Cash')">
+                <span class="tab-icon">💵</span>
+                <span class="tab-label">Cash</span>
+                <span class="tab-prefix">C001, C002…</span>
+            </button>
+            <button class="tab-btn" data-tab="Priority" onclick="setTab('Priority')">
+                <span class="tab-icon">⭐</span>
+                <span class="tab-label">Priority</span>
+                <span class="tab-prefix">P001, P002…</span>
+            </button>
+        </div>
+
+        <div class="now-serving-card">
+            <div class="ns-label">NOW SERVING</div>
+            <div class="ns-number" id="current">—</div>
+            <div class="ns-sub" id="currentSub">&nbsp;</div>
+        </div>
+
+        <div class="main-grid">
+            <div class="panel right-panel">
+                <div class="history-section">
+                    <div class="queue-header">
+                        <span class="queue-title">Recent Activity</span>
+                    </div>
+                    <div class="history-log" id="historyLog"></div>
+                </div>
+            </div>
+
+            <div class="panel left-panel">
+                <div class="next-up-block">
+                    <div class="next-label">Next Up</div>
+                    <div class="next-num" id="nextUp">—</div>
+                </div>
+                <button class="btn btn-primary" onclick="callNext()">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                    Call Next Patient
+                </button>
+                <div class="action-grid">
+                    <button class="btn btn-secondary" onclick="recallCurrent()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="M11 19a1 1 0 0 0 1 1h8a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8a1 1 0 0 0-1 1v12z" />
+                            <path d="M15 11l-3 3 3 3" />
+                        </svg>
+                        Recall
+                    </button>
+                    <button class="btn btn-secondary" onclick="skipNext()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="M5 4l10 8-10 8V4z" />
+                            <line x1="19" y1="5" x2="19" y2="19" />
+                        </svg>
+                        Skip
+                    </button>
+                </div>
+                <button class="btn btn-danger" onclick="resetQueue()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <polyline points="1 4 1 10 7 10" />
+                        <path d="M3.51 15a9 9 0 1 0 .49-3.5" />
+                    </svg>
+                    Reset This Queue
+                </button>
+            </div>
+        </div>
+
+        <!-- Firebase status indicator -->
+        <div id="fbStatus"
+            style="position:fixed;bottom:14px;right:18px;font-size:12px;font-weight:600;padding:6px 12px;border-radius:20px;background:#e2f8ee;color:#0e9f6e;display:none;">
+            ● Connected
+        </div>
+    </div>
+
+    <!-- Firebase via CDN (compat mode = no import needed, works with onclick) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script>
+        // ── Firebase Init ──────────────────────────────────────────────
+        firebase.initializeApp({
+            apiKey: "AIzaSyCKaS3b8Usv9zBHWuqzq3RMCIwtx7ttc5Q",
+            authDomain: "queueing-system-a35aa.firebaseapp.com",
+            projectId: "queueing-system-a35aa",
+            storageBucket: "queueing-system-a35aa.firebasestorage.app",
+            messagingSenderId: "706820569428",
+            appId: "1:706820569428:web:72792a1fef109a5a4670c1",
+            measurementId: "G-2J6DHTV94S",
+            databaseURL: "https://queueing-system-a35aa-default-rtdb.asia-southeast1.firebasedatabase.app"
+        });
+
+        const db = firebase.app().database("https://queueing-system-a35aa-default-rtdb.asia-southeast1.firebasedatabase.app");
+        const queueRef = db.ref('queue_state');
+
+        // ── Local State ────────────────────────────────────────────────
+        const queues = {
+            HMO: { prefix: 'H', current: 0, history: [] },
+            Cash: { prefix: 'C', current: 0, history: [] },
+            Priority: { prefix: 'P', current: 0, history: [] }
+        };
+
+        let activeTab = 'HMO';
+        let isSyncing = false;
+
+        // ── Helpers ────────────────────────────────────────────────────
+        function fmt(prefix, n) {
+            return prefix + String(n).padStart(3, '0');
+        }
+
+        function getQ() { return queues[activeTab]; }
+
+        // ── Push to Firebase ───────────────────────────────────────────
+        function pushToFirebase() {
+            const activeQ = queues[activeTab];
+            const subEl = document.getElementById('currentSub');
+            isSyncing = true;
+            queueRef.set({
+                num: activeQ.current === 0 ? '—' : fmt(activeQ.prefix, activeQ.current),
+                sub: activeQ.current === 0 ? '' : (subEl ? subEl.textContent.trim() : ''),
+                ts: Date.now(),
+                allQueues: {
+                    // Always spread into a real array so Firebase round-trips cleanly
+                    HMO: { prefix: 'H', current: queues.HMO.current, history: [...queues.HMO.history] },
+                    Cash: { prefix: 'C', current: queues.Cash.current, history: [...queues.Cash.history] },
+                    Priority: { prefix: 'P', current: queues.Priority.current, history: [...queues.Priority.history] }
+                }
+            }).then(() => {
+                setTimeout(() => { isSyncing = false; }, 600);
+            });
+        }
+
+        // ── Render UI (local only, no Firebase push) ───────────────────
+        function renderUI() {
+            const q = getQ();
+            const display = document.getElementById('current');
+            const sub = document.getElementById('currentSub');
+
+            if (q.current === 0) {
+                display.textContent = '—';
+                sub.innerHTML = '&nbsp;';
+            } else {
+                display.textContent = fmt(q.prefix, q.current);
+            }
+
+            document.getElementById('nextUp').textContent =
+                q.current < 999 ? fmt(q.prefix, q.current + 1) : '—';
+
+            document.getElementById('historyLog').innerHTML = q.history.map(e => `
+        <div class="log-item">
+            <span><strong>${fmt(e.prefix, e.num)}</strong> ${e.action}</span>
+            <span style="color:var(--text-muted)">${e.time}</span>
+        </div>
+    `).join('');
+        }
+
+        // renderQueue = render + push to Firebase (only for real actions)
+        function renderQueue() {
+            renderUI();
+            pushToFirebase();
+        }
+
+        function addHistory(action, num) {
+            const q = getQ();
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            q.history.unshift({ action, num, prefix: q.prefix, time, timestamp: Date.now() });
+            if (q.history.length > 30) q.history.pop();
+        }
+
+        // ── Tab switching ──────────────────────────────────────────────
+        function setTab(tab) {
+            activeTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+            renderUI(); // local only — never triggers display or speech
+        }
+
+        // ── Queue Actions ──────────────────────────────────────────────
+        function callNext() {
+            const q = getQ();
+            if (q.current >= 999) { alert('Maximum number reached. Please reset.'); return; }
+            q.current++;
+            const display = document.getElementById('current');
+            const sub = document.getElementById('currentSub');
+            display.textContent = fmt(q.prefix, q.current);
+            sub.textContent = 'Please proceed to the window';
+            display.classList.remove('pop');
+            void display.offsetWidth;
+            display.classList.add('pop');
+            addHistory('Called', q.current);
+            renderQueue();
+        }
+
+        function recallCurrent() {
+            const q = getQ();
+            if (q.current === 0) return;
+            addHistory('Recalled', q.current);
+            renderQueue();
+        }
+
+        function skipNext() {
+            const q = getQ();
+            if (q.current >= 999) return;
+            q.current++;
+            document.getElementById('current').textContent = fmt(q.prefix, q.current);
+            document.getElementById('currentSub').textContent = 'Number Skipped';
+            addHistory('Skipped', q.current);
+            renderQueue();
+        }
+
+        function resetQueue() {
+            if (!confirm(`Reset the ${activeTab} queue? This cannot be undone.`)) return;
+            const q = getQ();
+            q.current = 0;
+            q.history = [];
+            const display = document.getElementById('current');
+            display.textContent = '—';
+            display.classList.remove('pop');
+            document.getElementById('currentSub').innerHTML = '&nbsp;';
+            renderQueue();
+        }
+
+        // ── Firebase stores arrays as objects — always normalize ───────
+        function toArray(val) {
+            if (!val) return [];
+            if (Array.isArray(val)) return val;
+            return Object.values(val); // {0:{…},1:{…}} → [{…},{…}]
+        }
+
+        // ── Sync FROM Firebase (page load + other devices) ─────────────
+        queueRef.on('value', (snapshot) => {
+            if (isSyncing) return;
+            const data = snapshot.val();
+            if (!data || !data.allQueues) return;
+
+            // Restore all queue state from Firebase (fixes refresh data loss)
+            for (const [type, q] of Object.entries(data.allQueues)) {
+                if (queues[type]) {
+                    queues[type].current = q.current || 0;
+                    queues[type].history = toArray(q.history); // fixes array→object bug
+                }
+            }
+
+            // Re-render local UI only — never push back to Firebase here
+            renderUI();
+
+            // Restore sub-label for the active tab
+            const q = getQ();
+            const sub = document.getElementById('currentSub');
+            if (q.current !== 0) {
+                sub.textContent = data.sub || 'Please proceed to the window';
+            }
+        });
+
+        // ── Connection status indicator ────────────────────────────────
+        db.ref('.info/connected').on('value', (snap) => {
+            const el = document.getElementById('fbStatus');
+            if (snap.val() === true) {
+                el.style.display = 'block';
+                el.style.background = '#e2f8ee';
+                el.style.color = '#0e9f6e';
+                el.textContent = '● Firebase Connected';
+            } else {
+                el.style.display = 'block';
+                el.style.background = '#fde8e8';
+                el.style.color = '#e02424';
+                el.textContent = '○ Reconnecting…';
+            }
+        });
+
+        // ── Init ───────────────────────────────────────────────────────
+        renderUI();
+    </script>
+</body>
+
+</html>
